@@ -197,7 +197,7 @@ The collection:
 - verifies protected write requests fail without a JWT
 - checks status codes, response time, and JSON fields
 
-## Notes for Reviewers
+## API Behavior
 
 - Database tables are created automatically when `create_app()` runs.
 - POST, PUT, and DELETE REST operations require JWT authentication.

@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel hero-panel">
+    <div class="hero-copy">
+        <p class="eyebrow">Software Testing Project</p>
+        <h1>Career flow built for speed.</h1>
+        <p class="hero-text">Post roles, collect applicants, and test every layer from UI to API.</p>
+        <div class="hero-actions">
+            <a href="#launch" class="button button-primary">Launch role</a>
+            <a href="#board" class="button button-secondary">View board</a>
+        </div>
+    </div>
+    <div class="stat-grid">
+        <article class="stat-card">
+            <span class="stat-label">Live roles</span>
+            <strong>{{ metrics.live_roles }}</strong>
+        </article>
+        <article class="stat-card">
+            <span class="stat-label">Companies</span>
+            <strong>{{ metrics.companies }}</strong>
+        </article>
+        <article class="stat-card">
+            <span class="stat-label">Applications</span>
+            <strong>{{ metrics.applications }}</strong>
+        </article>
+        <article class="stat-card">
+            <span class="stat-label">Remote-ready</span>
+            <strong>{{ metrics.remote_ready }}</strong>
+        </article>
+    </div>
+</section>
+
+<section class="launch-layout">
+    <article class="panel form-panel" id="launch">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Launch</p>
+                <h2>Publish a role</h2>
+            </div>
+            <span class="section-badge">Fast input</span>
+        </div>
+        <form method="post" action="{{ url_for('web.create_opportunity_route') }}" class="stack-form">
+            <div class="field-grid">
+                <label class="field">
+                    <span>Role</span>
+                    <input type="text" name="title" placeholder="QA Engineer" required>
+                </label>
+                <label class="field">
+                    <span>Company</span>
+                    <input type="text" name="company" placeholder="BlueOrbit Labs" required>
+                </label>
+                <label class="field">
+                    <span>Location</span>
+                    <input type="text" name="location" placeholder="Remote or city" required>
+                </label>
+                <label class="field">
+                    <span>Category</span>
+                    <input type="text" name="category" placeholder="Quality Engineering" required>
+                </label>
+                <label class="field">
+                    <span>Mode</span>
+                    <select name="work_mode" required>
+                        <option value="Remote">Remote</option>
+                        <option value="Hybrid">Hybrid</option>
+                        <option value="On-site">On-site</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Salary</span>
+                    <input type="text" name="salary_range" placeholder="EUR 1.5k - 2k">
+                </label>
+            </div>
+            <label class="field">
+                <span>Summary</span>
+                <textarea name="summary" rows="3" placeholder="Short, sharp, and specific." required></textarea>
+            </label>
+            <button type="submit" class="button button-primary">Publish</button>
+        </form>
+    </article>
+
+    <aside class="panel utility-panel">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">API</p>
+                <h2>Testing lanes</h2>
+            </div>
+            <span class="section-badge">JSON ready</span>
+        </div>
+        <div class="endpoint-list">
+            {% for item in api_reference %}
+                <div class="endpoint-row">
+                    <span class="method-pill">{{ item.method }}</span>
+                    <code>{{ item.path }}</code>
+                </div>
+            {% endfor %}
+        </div>
+        <p class="utility-note">HTML and API routes share one service layer, which keeps behavior consistent during testing.</p>
+    </aside>
+</section>
+
+<section class="board-section" id="board">
+    <div class="section-heading board-heading">
+        <div>
+            <p class="eyebrow">Board</p>
+            <h2>Open roles</h2>
+        </div>
+        <span class="section-badge">{{ opportunities|length }} live</span>
+    </div>
+    <div class="card-grid">
+        {% for opportunity in opportunities %}
+            <article class="panel opportunity-card" id="opportunity-{{ opportunity.id }}">
+                <div class="card-header">
+                    <div>
+                        <p class="micro-label">{{ opportunity.category }}</p>
+                        <h3>{{ opportunity.title }}</h3>
+                    </div>
+                    <span class="status-pill">{{ opportunity.application_count }} apps</span>
+                </div>
+                <p class="card-meta">{{ opportunity.company }} · {{ opportunity.location }}</p>
+                <p class="card-summary">{{ opportunity.summary }}</p>
+                <div class="chip-row">
+                    <span class="chip">{{ opportunity.work_mode }}</span>
+                    <span class="chip">{{ opportunity.salary_range or "Custom package" }}</span>
+                </div>
+                <details class="apply-box">
+                    <summary>Apply</summary>
+                    <form method="post" action="{{ url_for('web.apply_route', opportunity_id=opportunity.id) }}" class="stack-form apply-form">
+                        <label class="field">
+                            <span>Name</span>
+                            <input type="text" name="applicant_name" placeholder="Your name" required>
+                        </label>
+                        <label class="field">
+                            <span>Email</span>
+                            <input type="email" name="applicant_email" placeholder="name@example.com" required>
+                        </label>
+                        <label class="field">
+                            <span>Portfolio</span>
+                            <input type="url" name="portfolio_url" placeholder="https://portfolio.link">
+                        </label>
+                        <label class="field">
+                            <span>Why you</span>
+                            <textarea name="motivation" rows="3" placeholder="Short pitch." required></textarea>
+                        </label>
+                        <button type="submit" class="button button-secondary">Send</button>
+                    </form>
+                </details>
+            </article>
+        {% else %}
+            <article class="panel empty-card">
+                <h3>No roles yet</h3>
+                <p>Use the launch form to create the first opening.</p>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="panel activity-panel" id="activity">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Pipeline</p>
+            <h2>Recent applications</h2>
+        </div>
+        <span class="section-badge">Newest first</span>
+    </div>
+    <div class="activity-list">
+        {% for item in recent_applications %}
+            <article class="activity-row">
+                <div>
+                    <p class="activity-name">{{ item.applicant_name }}</p>
+                    <p class="activity-meta">{{ item.opportunity_title }} · {{ item.opportunity_company }}</p>
+                </div>
+                <span class="activity-time">{{ item.created_at[:16] }}</span>
+            </article>
+        {% else %}
+            <p class="utility-note">Applications will appear here after the first submission.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

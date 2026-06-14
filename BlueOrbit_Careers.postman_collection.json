@@ -1,0 +1,507 @@
+{
+  "info": {
+    "name": "BlueOrbit Careers API",
+    "description": "System tests for the Flask career opportunity management application.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set('postman_username', 'postman_user_' + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });",
+                  "pm.test('User fields exist', function () { const json = pm.response.json(); pm.expect(json).to.have.property('id'); pm.expect(json).to.have.property('username'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{postman_username}}\",\n  \"password\": \"secret123\"\n}"
+            },
+            "url": "{{base_url}}/register"
+          }
+        },
+        {
+          "name": "Protected Write Requires Token",
+          "auth": {
+            "type": "noauth"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.unset('jwt_token');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 401', function () { pm.response.to.have.status(401); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });",
+                  "pm.test('Authorization error is returned', function () { pm.expect(pm.response.json()).to.have.property('error'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Unauthorized Labs {{$timestamp}}\",\n  \"description\": \"This request should be rejected.\"\n}"
+            },
+            "url": "{{base_url}}/company"
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{postman_username}}\",\n  \"password\": \"secret123\"\n}"
+            },
+            "url": "{{base_url}}/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });",
+                  "pm.test('Token is returned', function () { const json = pm.response.json(); pm.expect(json).to.have.property('access_token'); pm.environment.set('jwt_token', json.access_token); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Companies",
+      "item": [
+        {
+          "name": "Create Company",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Labs {{$timestamp}}\",\n  \"description\": \"Company created from Postman tests.\"\n}"
+            },
+            "url": "{{base_url}}/company"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });",
+                  "pm.test('Company fields exist', function () { const json = pm.response.json(); pm.expect(json).to.include.keys('id', 'name', 'description'); pm.environment.set('company_id', json.id); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Companies",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/companies"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });",
+                  "pm.test('Items array exists', function () { pm.expect(pm.response.json().items).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Company by Id",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/company/{{company_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });",
+                  "pm.test('Company detail includes jobs array', function () { const json = pm.response.json(); pm.expect(json).to.include.keys('id', 'name', 'description', 'jobs'); pm.expect(json.id).to.eql(Number(pm.environment.get('company_id'))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Company",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated from Postman system test.\"\n}"
+            },
+            "url": "{{base_url}}/company/{{company_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });",
+                  "pm.test('Description updated', function () { pm.expect(pm.response.json().description).to.include('Updated'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Jobs",
+      "item": [
+        {
+          "name": "Create Job",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman QA Engineer\",\n  \"description\": \"Validate the complete API through Postman.\",\n  \"salary\": 2500,\n  \"company_id\": {{company_id}},\n  \"location\": \"Prishtina\"\n}"
+            },
+            "url": "{{base_url}}/job"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });",
+                  "pm.test('Job fields and location exist', function () { const json = pm.response.json(); pm.expect(json).to.include.keys('id', 'title', 'description', 'salary', 'company_id', 'location'); pm.expect(json.location).to.eql('Prishtina'); pm.environment.set('job_id', json.id); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Jobs",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/jobs"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });",
+                  "pm.test('Items include location field', function () { const first = pm.response.json().items[0]; if (first) pm.expect(first).to.have.property('location'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Job by Id",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/job/{{job_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });",
+                  "pm.test('Job detail includes location and applications', function () { const json = pm.response.json(); pm.expect(json).to.include.keys('id', 'location', 'applications'); pm.expect(json.id).to.eql(Number(pm.environment.get('job_id'))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Job",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"location\": \"Remote\"\n}"
+            },
+            "url": "{{base_url}}/job/{{job_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });",
+                  "pm.test('Location updated', function () { pm.expect(pm.response.json().location).to.eql('Remote'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Applications",
+      "item": [
+        {
+          "name": "Create Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"candidate_name\": \"Postman Candidate\",\n  \"email\": \"candidate@example.com\",\n  \"status\": \"New\",\n  \"job_id\": {{job_id}},\n  \"resume_link\": \"https://example.com/resume.pdf\"\n}"
+            },
+            "url": "{{base_url}}/application"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });",
+                  "pm.test('Application fields exist', function () { const json = pm.response.json(); pm.expect(json).to.include.keys('id', 'candidate_name', 'email', 'status', 'job_id', 'resume_link'); pm.environment.set('application_id', json.id); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Applications",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/applications"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });",
+                  "pm.test('Items array exists', function () { pm.expect(pm.response.json().items).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Application by Id",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/application/{{application_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });",
+                  "pm.test('Application detail includes nested job', function () { const json = pm.response.json(); pm.expect(json).to.include.keys('id', 'candidate_name', 'job'); pm.expect(json.id).to.eql(Number(pm.environment.get('application_id'))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Application",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Reviewed\"\n}"
+            },
+            "url": "{{base_url}}/application/{{application_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });",
+                  "pm.test('Status updated', function () { pm.expect(pm.response.json().status).to.eql('Reviewed'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Application",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/application/{{application_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Job",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/job/{{job_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Company",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/company/{{company_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response time is acceptable', function () { pm.expect(pm.response.responseTime).to.be.below(2000); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -4,6 +4,8 @@ A full-stack career portal with a JWT-protected REST API, layered architecture, 
 
 ![Python](https://img.shields.io/badge/python-3.13-blue) ![Flask](https://img.shields.io/badge/flask-3.x-black) ![Tests](https://img.shields.io/badge/tests-22%20passing-brightgreen) ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
+**Live demo:** https://mirzamemovic.pythonanywhere.com
+
 BlueOrbit Careers manages the four core entities of a job marketplace: users, companies, jobs, and applications. It includes a JWT-protected REST API, a server-rendered dashboard, SQLite persistence, automated pytest coverage, and a Postman collection for external API testing.
 
 The codebase is structured in layers:

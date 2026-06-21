@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from flask import Flask
@@ -12,10 +13,13 @@ from .views import web_bp
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
-        SECRET_KEY="blueorbit-dev-key",
+        SECRET_KEY=os.environ.get("SECRET_KEY", "blueorbit-dev-key"),
         SQLALCHEMY_DATABASE_URI=f"sqlite:///{Path(app.instance_path) / 'blueorbit.sqlite3'}",
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        JWT_SECRET_KEY="blueorbit-jwt-dev-key-for-course-assignment",
+        JWT_SECRET_KEY=os.environ.get(
+            "JWT_SECRET_KEY",
+            "blueorbit-jwt-dev-key-for-course-assignment",
+        ),
         JSON_SORT_KEYS=False,
     )
 

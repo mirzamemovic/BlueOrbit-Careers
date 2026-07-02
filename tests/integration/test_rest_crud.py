@@ -59,8 +59,13 @@ def test_duplicate_username_and_invalid_login_errors(client):
     first = client.post("/register", json={"username": "mila", "password": "secret123"})
     duplicate = client.post("/register", json={"username": "mila", "password": "secret123"})
     login = client.post("/login", json={"username": "mila", "password": "wrong"})
+    padded_login = client.post("/login", json={"username": "  mila  ", "password": "secret123"})
+    blank_register = client.post("/register", json={"username": "   ", "password": "secret123"})
 
     assert first.status_code == 201
     assert duplicate.status_code == 400
     assert duplicate.get_json()["details"]["username"] == "Username already exists."
     assert login.status_code == 401
+    assert padded_login.status_code == 200
+    assert blank_register.status_code == 400
+    assert blank_register.get_json()["details"]["username"] == "username is required."

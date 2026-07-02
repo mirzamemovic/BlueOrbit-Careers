@@ -19,8 +19,12 @@ def _payload():
     return request.get_json(silent=True) or {}
 
 
+def _compact_text(value):
+    return " ".join(str(value or "").split())
+
+
 def _required(data, fields):
-    return {field: f"{field} is required." for field in fields if data.get(field) in (None, "")}
+    return {field: f"{field} is required." for field in fields if not _compact_text(data.get(field))}
 
 
 def _bad_request(details):
@@ -129,7 +133,7 @@ class RegisterResource(Resource):
     def post(self):
         data = _payload()
         errors = _required(data, ("username", "password"))
-        username = " ".join(str(data.get("username") or "").split())
+        username = _compact_text(data.get("username"))
         password = str(data.get("password") or "")
 
         if username and UserModel.query.filter_by(username=username).first():
@@ -150,10 +154,11 @@ class LoginResource(Resource):
     def post(self):
         data = _payload()
         errors = _required(data, ("username", "password"))
+        username = _compact_text(data.get("username"))
         if errors:
             return _bad_request(errors)
 
-        user = UserModel.query.filter_by(username=data["username"]).first()
+        user = UserModel.query.filter_by(username=username).first()
         if user is None or not user.check_password(data["password"]):
             return {"error": "Invalid username or password."}, 401
 
